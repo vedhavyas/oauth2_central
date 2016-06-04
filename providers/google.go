@@ -1,26 +1,26 @@
 package providers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
-	"fmt"
 	"github.com/vedhavyas/oauth2_central/config"
-	"github.com/vedhavyas/oauth2_central/server"
+	"github.com/vedhavyas/oauth2_central/sessions"
 )
 
-type googleProvider struct {
+type GoogleProvider struct {
 	pData *providerData
 }
 
-func (provider *googleProvider) Authenticate(w http.ResponseWriter, r *http.Request) {
-	session, err := server.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))
+func (provider *GoogleProvider) Authenticate(w http.ResponseWriter, r *http.Request) {
+	session, err := sessions.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	accessToken, ok := session.Values[fmt.Sprintf("%s_access_token", provider.pData.ProviderName)]
+	_, ok := session.Values[fmt.Sprintf("%s_access_token", provider.pData.ProviderName)]
 	if ok {
 		//validate access token
 		return
@@ -42,7 +42,7 @@ func (provider *googleProvider) Authenticate(w http.ResponseWriter, r *http.Requ
 	}
 
 	//create a new session for state management
-	currentSession, err := server.SimpleCookieStore.Get(r, fmt.Sprintf("%s_save_state", provider.pData.ProviderName))
+	currentSession, err := sessions.SimpleCookieStore.Get(r, fmt.Sprintf("%s_save_state", provider.pData.ProviderName))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,16 +52,21 @@ func (provider *googleProvider) Authenticate(w http.ResponseWriter, r *http.Requ
 	currentSession.Values["state"] = randomToken
 	currentSession.Values["redirect_url"] = redirectURL
 	currentSession.Values["source_state"] = sourceState
+	currentSession.Save(r, w)
 
 	authURL := provider.pData.LoginURL
 	params, _ := url.ParseQuery(authURL.RawQuery)
 	params.Set("response_type", "code")
 	params.Set("scope", provider.pData.Scope)
 	params.Set("client_id", provider.pData.ClientID)
-
+	params.Set("redirect_uri", GetAuthCallBackURL(r))
+	params.Set("approval_prompt", "force")
+	params.Set("state", state)
+	authURL.RawQuery = params.Encode()
+	http.Redirect(w, r, authURL.String(), http.StatusFound)
 }
 
-func NewGoogleProvider() {
+func NewGoogleProvider() Provider {
 	pData := providerData{}
 	pData.ProviderName = "google"
 	pData.ClientID = config.Config.GoogleClientID
@@ -80,5 +85,5 @@ func NewGoogleProvider() {
 		Host: "www.googleapis.com",
 		Path: "/oauth2/v1/tokeninfo"}
 
-	return googleProvider{pData: pData}
+	return &GoogleProvider{pData: &pData}
 }

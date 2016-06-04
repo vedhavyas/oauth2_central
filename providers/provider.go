@@ -4,10 +4,28 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
+	"net/url"
+
+	"github.com/vedhavyas/oauth2_central/config"
 )
 
 type Provider interface {
 	Authenticate(http.ResponseWriter, *http.Request)
+}
+
+func GetAuthCallBackURL(r *http.Request) string {
+	authCallBackURL := url.URL{}
+	authCallBackURL.Scheme = r.URL.Scheme
+	authCallBackURL.Host = r.Host
+	authCallBackURL.Path = "/oauth2/callback"
+	if authCallBackURL.Scheme == "" {
+		if config.Config.IsSecure() {
+			authCallBackURL.Scheme = "https"
+		} else {
+			authCallBackURL.Scheme = "http"
+		}
+	}
+	return authCallBackURL.String()
 }
 
 func GetProvider(providerName string) Provider {

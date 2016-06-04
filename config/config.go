@@ -15,6 +15,9 @@ type config struct {
 	GoogleClientID  string `json:"google_client_id"`
 	GoogleSecret    string `json:"google_client_secret"`
 	GoogleAuthScope string `json:"google_auth_scope"`
+
+	TLSKey  string `json:"tls_key"`
+	TLSCert string `json:"tls_cert"`
 }
 
 var Config = config{}
@@ -31,4 +34,8 @@ func LoadConfigFile(filePath string) {
 		log.Fatal(err)
 	}
 	json.NewDecoder(file).Decode(&Config)
+}
+
+func (c config) IsSecure() bool {
+	return c.TLSCert != "" && c.TLSKey != ""
 }

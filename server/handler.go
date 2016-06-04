@@ -4,12 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/sessions"
 	"github.com/vedhavyas/oauth2_central/providers"
 )
-
-var DefaultCookieStore *sessions.CookieStore
-var SimpleCookieStore *sessions.CookieStore
 
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
@@ -17,7 +13,7 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	providerName := r.FormValue("provider")
-	if providerName == nil {
+	if providerName == "" {
 		http.Error(w, "Provider Value is Missing", http.StatusBadRequest)
 		return
 	}

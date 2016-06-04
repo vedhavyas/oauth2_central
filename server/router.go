@@ -16,6 +16,7 @@ var Router = mux.NewRouter()
 func init() {
 	Router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 	Router.HandleFunc("/oauth2/authenticate", AuthenticateHandler).Methods("POST")
+	Router.HandleFunc("/oauth2/authenticate/", AuthenticateHandler).Methods("POST")
 	Router.HandleFunc("/oauth2/callback", CallbackHandler).Methods("POST")
 	Router.HandleFunc("/oauth2/ping", PingHandler).Methods("HEAD", "GET")
 
@@ -23,4 +24,23 @@ func init() {
 
 func ServeHttp() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", config.Config.Port), helpers.LoggingHandler(Router)))
+}
+
+func ServeHttpsIfAvailable() {
+	if config.Config.IsSecure() {
+		err := http.ListenAndServeTLS(
+			fmt.Sprintf(":%s", config.Config.Port),
+			config.Config.TLSCert,
+			config.Config.TLSKey,
+			helpers.LoggingHandler(Router))
+
+		if err != nil {
+			log.Fatal(err)
+			ServeHttp()
+		}
+
+		return
+	}
+
+	ServeHttp()
 }
