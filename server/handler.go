@@ -19,7 +19,13 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
-	providerName := r.FormValue("provider")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	providerName := r.Form.Get("provider")
 	if providerName == "" {
 		http.Error(w, "Provider Value is Missing", http.StatusBadRequest)
 		return
@@ -38,9 +44,9 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("loaded session with Default Cookie store")
-	_, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
+	accessToken, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
 	if ok {
-		//todo validate access token and revert back
+		log.Println("found access token - " + accessToken.(string))
 		return
 	}
 
@@ -51,8 +57,8 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectURL := r.FormValue("redirect_url")
-	sourceState := r.FormValue("state")
+	redirectURL := r.Form.Get("redirect_url")
+	sourceState := r.Form.Get("state")
 
 	if redirectURL == "" {
 		http.Error(w, "redirect_url is missing from the form", http.StatusBadRequest)
@@ -143,7 +149,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redeemResponse, err := provider.RedeemCode(code, rawRedirectUrl)
+	redeemResponse, err := provider.RedeemCode(code, providers.GetAuthCallBackURL(r))
 	if err != nil {
 		redirectFailedAuth(w, r, redirectURL, sourceState, err.Error())
 		return
@@ -161,6 +167,16 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if authResponse == nil {
 		//todo get from access token
 	}
+
+	session, err := sessions.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
+	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
+	session.Save(r, w)
 
 	params := url.Values{}
 	params.Set("email", authResponse.Email)
