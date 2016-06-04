@@ -34,6 +34,7 @@ func LoadConfigFile(filePath string) {
 		log.Fatal(err)
 	}
 	json.NewDecoder(file).Decode(&Config)
+	log.Println("loaded config file from - " + filePath)
 }
 
 func (c config) IsSecure() bool {

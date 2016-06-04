@@ -17,7 +17,7 @@ func init() {
 	Router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 	Router.HandleFunc("/oauth2/authenticate", AuthenticateHandler).Methods("POST")
 	Router.HandleFunc("/oauth2/authenticate/", AuthenticateHandler).Methods("POST")
-	Router.HandleFunc("/oauth2/callback", CallbackHandler).Methods("POST")
+	Router.HandleFunc("/oauth2/callback", CallbackHandler).Methods("GET")
 	Router.HandleFunc("/oauth2/ping", PingHandler).Methods("HEAD", "GET")
 
 }

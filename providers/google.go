@@ -1,59 +1,25 @@
 package providers
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/vedhavyas/oauth2_central/config"
-	"github.com/vedhavyas/oauth2_central/sessions"
 )
 
 type GoogleProvider struct {
 	pData *providerData
 }
 
-func (provider *GoogleProvider) Authenticate(w http.ResponseWriter, r *http.Request) {
-	session, err := sessions.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	_, ok := session.Values[fmt.Sprintf("%s_access_token", provider.pData.ProviderName)]
-	if ok {
-		//validate access token
-		return
-	}
-
-	//redirect and fetch new tokens
-	randomToken, err := GenerateRandomString(32)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	redirectURL := r.FormValue("redirect_url")
-	sourceState := r.FormValue("state")
-
-	if redirectURL == "" {
-		http.Error(w, "redirect_url is missing from the form", http.StatusBadRequest)
-		return
-	}
-
-	//create a new session for state management
-	currentSession, err := sessions.SimpleCookieStore.Get(r, fmt.Sprintf("%s_save_state", provider.pData.ProviderName))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	state := fmt.Sprintf("%s||%s", provider.pData.ProviderName, randomToken)
-	currentSession.Values["state"] = randomToken
-	currentSession.Values["redirect_url"] = redirectURL
-	currentSession.Values["source_state"] = sourceState
-	currentSession.Save(r, w)
-
+func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *http.Request, state string) {
 	authURL := provider.pData.LoginURL
 	params, _ := url.ParseQuery(authURL.RawQuery)
 	params.Set("response_type", "code")
@@ -63,7 +29,58 @@ func (provider *GoogleProvider) Authenticate(w http.ResponseWriter, r *http.Requ
 	params.Set("approval_prompt", "force")
 	params.Set("state", state)
 	authURL.RawQuery = params.Encode()
+	log.Println(authURL.String())
 	http.Redirect(w, r, authURL.String(), http.StatusFound)
+}
+
+func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*RedeemResponse, error) {
+	params := url.Values{}
+	params.Add("redirect_uri", redirectURL)
+	params.Add("client_id", provider.pData.ClientID)
+	params.Add("client_secret", provider.pData.ClientSecret)
+	params.Add("code", code)
+	params.Add("grant_type", "authorization_code")
+
+	var req *http.Request
+	req, err := http.NewRequest("POST", provider.pData.RedeemURl.String(), bytes.NewBufferString(params.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	var body []byte
+	body, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("got %d from %q %s", resp.StatusCode, provider.pData.RedeemURl.String(), body)
+		return nil, err
+	}
+
+	var jsonResponse struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+		IdToken      string `json:"id_token"`
+	}
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	redeemResponse := RedeemResponse{}
+	redeemResponse.AccessToken = jsonResponse.AccessToken
+	redeemResponse.RefreshToken = jsonResponse.RefreshToken
+	redeemResponse.ExpiresOn = time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second)
+	redeemResponse.IdToken = jsonResponse.IdToken
+	return &redeemResponse, nil
 }
 
 func NewGoogleProvider() Provider {
@@ -73,17 +90,41 @@ func NewGoogleProvider() Provider {
 	pData.ClientSecret = config.Config.GoogleSecret
 	pData.Scope = config.Config.GoogleAuthScope
 	pData.LoginURL = &url.URL{Scheme: "https",
-		Host: "accounts.google.com",
-		Path: "/o/oauth2/auth",
-		// to get a refresh token. see https://developers.google.com/identity/protocols/OAuth2WebServer#offline
+		Host:     "accounts.google.com",
+		Path:     "/o/oauth2/auth",
 		RawQuery: "access_type=offline",
 	}
 	pData.RedeemURl = &url.URL{Scheme: "https",
 		Host: "www.googleapis.com",
-		Path: "/oauth2/v3/token"}
+		Path: "/oauth2/v4/token"}
 	pData.ValidateURL = &url.URL{Scheme: "https",
 		Host: "www.googleapis.com",
 		Path: "/oauth2/v1/tokeninfo"}
 
 	return &GoogleProvider{pData: &pData}
+}
+
+func GetProfileFromIdToken(authResponse *AuthResponse, idToken string) error {
+	// id_token is a base64 encode ID token payload
+	// https://developers.google.com/accounts/docs/OAuth2Login#obtainuserinfo
+	jwt := strings.Split(idToken, ".")
+	b, err := jwtDecodeSegment(jwt[1])
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(b, authResponse)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func jwtDecodeSegment(seg string) ([]byte, error) {
+	if l := len(seg) % 4; l > 0 {
+		seg += strings.Repeat("=", 4-l)
+	}
+
+	return base64.URLEncoding.DecodeString(seg)
 }

@@ -6,9 +6,9 @@ import (
 )
 
 var DefaultCookieStore *sessions.CookieStore
-var SimpleCookieStore *sessions.CookieStore
+var ShortLiveCookie *sessions.CookieStore
 
 func InitiateCookieStores() {
 	DefaultCookieStore = sessions.NewCookieStore([]byte(config.Config.CookieSecret))
-	SimpleCookieStore = sessions.NewCookieStore([]byte(config.Config.CookieSecret))
+	ShortLiveCookie = sessions.NewCookieStore([]byte(config.Config.CookieSecret))
 }
