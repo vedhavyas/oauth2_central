@@ -5,13 +5,13 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/vedhavyas/oauth2_central/config"
 	"github.com/vedhavyas/oauth2_central/providers"
 	"github.com/vedhavyas/oauth2_central/sessions"
 	"github.com/vedhavyas/oauth2_central/utilities"
-	"strconv"
 )
 
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("loaded session with Default Cookie store")
 	_, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
 	if ok {
-		//validate access token
+		//todo validate access token and revert back
 		return
 	}
 
@@ -159,7 +159,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if authResponse == nil {
-		//validate here
+		//todo get from access token
 	}
 
 	params := url.Values{}

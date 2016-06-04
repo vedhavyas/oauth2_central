@@ -3,9 +3,9 @@ package providers
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/vedhavyas/oauth2_central/config"
-	"time"
 )
 
 type Provider interface {
