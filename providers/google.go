@@ -32,6 +32,41 @@ func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *htt
 	http.Redirect(w, r, authURL.String(), http.StatusFound)
 }
 
+func (provider *GoogleProvider) RefreshAccessToken(refreshToken string) (*RedeemResponse, error) {
+	params := url.Values{}
+	params.Set("refresh_token", refreshToken)
+	params.Set("client_id", provider.pData.ClientID)
+	params.Set("client_secret", provider.pData.ClientSecret)
+	params.Set("grant_type", "refresh_token")
+
+	req, err := http.NewRequest("POST", provider.pData.RedeemURl.String(), bytes.NewBufferString(params.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	var jsonResponse struct {
+		AccessToken string `json:"access_token"`
+		ExpiryIn    int64  `json:"expires_in"`
+	}
+
+	json.Unmarshal(body, &jsonResponse)
+	redeemResponse := RedeemResponse{}
+	redeemResponse.AccessToken = jsonResponse.AccessToken
+	redeemResponse.RefreshToken = refreshToken
+	redeemResponse.ExpiresOn = time.Now().Add(time.Duration(jsonResponse.ExpiryIn) * time.Second).Truncate(time.Second)
+
+	return &redeemResponse, nil
+}
+
 func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*RedeemResponse, error) {
 	params := url.Values{}
 	params.Add("redirect_uri", redirectURL)
@@ -82,7 +117,7 @@ func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*Re
 	return &redeemResponse, nil
 }
 
-func (provider *GoogleProvider) ValidateAccessToken(accessToken string) (*AuthResponse, error) {
+func (provider *GoogleProvider) GetProfileDataFromAccessToken(accessToken string) (*AuthResponse, error) {
 	if provider.pData.ValidateURL == nil {
 		return nil, errors.New("Validation URL missing in provider")
 	}

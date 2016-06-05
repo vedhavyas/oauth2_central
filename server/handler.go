@@ -60,7 +60,7 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("loaded session with Default Cookie store")
 	accessToken, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
 	if ok {
-		authResponse, err := provider.ValidateAccessToken(accessToken.(string))
+		authResponse, err := provider.GetProfileDataFromAccessToken(accessToken.(string))
 		if err == nil {
 			redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
 			return
@@ -73,7 +73,23 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		redeemResponse, err :=
+		redeemResponse, err := provider.RefreshAccessToken(refreshToken.(string))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		authResponse, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
+		session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
+		session.Save(r, w)
+
+		redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
 	}
 
 	log.Println("access token missing. re-fetching tokens...")
@@ -183,7 +199,11 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if authResponse == nil {
-		//todo get from access token
+		authResponse, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	session, err := sessions.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))

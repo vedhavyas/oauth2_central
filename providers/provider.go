@@ -11,7 +11,7 @@ import (
 type Provider interface {
 	RedirectToAuthPage(http.ResponseWriter, *http.Request, string)
 	RedeemCode(string, string) (*RedeemResponse, error)
-	ValidateAccessToken(string) (*AuthResponse, error)
+	GetProfileDataFromAccessToken(string) (*AuthResponse, error)
 	RefreshAccessToken(string) (*RedeemResponse, error)
 }
 
@@ -26,6 +26,17 @@ type RedeemResponse struct {
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresOn    time.Time `json:"time"`
 	IdToken      string    `json:"id_token"`
+}
+
+type providerData struct {
+	ProviderName string
+	ClientID     string
+	ClientSecret string
+	Scope        string
+	LoginURL     *url.URL
+	RedeemURl    *url.URL
+	ValidateURL  *url.URL
+	ProfileURL   *url.URL
 }
 
 func GetAuthCallBackURL(r *http.Request) string {
