@@ -16,7 +16,8 @@ func generateRandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-func GenerateRandomString(s int) (string, error) {
-	b, err := generateRandomBytes(s)
+//GenerateRandomString generates a string of n bytes. Used for state recognition
+func GenerateRandomString(n int) (string, error) {
+	b, err := generateRandomBytes(n)
 	return base64.URLEncoding.EncodeToString(b), err
 }

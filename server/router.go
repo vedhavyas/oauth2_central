@@ -21,10 +21,12 @@ func init() {
 
 }
 
+//ServerHttp serves http API
 func ServeHttp() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", config.Config.Port), helpers.LoggingHandler(Router)))
 }
 
+//ServeHttpsIfAvailable serves https API
 func ServeHttpsIfAvailable() {
 	if config.Config.Secure {
 		err := http.ListenAndServeTLS(

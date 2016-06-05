@@ -10,6 +10,7 @@ import (
 
 //Provider interface for every provider available
 type Provider interface {
+	Data() *providerData
 	RedirectToAuthPage(http.ResponseWriter, *http.Request, string)
 	RedeemCode(string, string) (*RedeemResponse, error)
 	GetProfileDataFromAccessToken(string) (*AuthResponse, error)

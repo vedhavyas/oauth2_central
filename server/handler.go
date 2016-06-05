@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,12 +13,14 @@ import (
 	"github.com/vedhavyas/oauth2_central/utilities"
 )
 
-//NotFoundHandler gets callback when no route is defines
+//NotFoundHandler gets callback when no routes defined didn't match with received
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
+//AuthenticateHandler callback to handle all authenticate requests
 func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
+	//todo check for remote address
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -58,42 +59,46 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("loaded session with Default Cookie store")
 	accessToken, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
-	if ok {
-		authResponse, err := provider.GetProfileDataFromAccessToken(accessToken.(string))
-		if err == nil {
-			redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
-			return
-		}
-
-		//access token invalid
-		refreshToken, ok := session.Values[fmt.Sprintf("%s_refresh_token", providerName)]
-		if !ok {
-			http.Error(w, "Refresh token missing", http.StatusInternalServerError)
-			return
-		}
-
-		redeemResponse, err := provider.RefreshAccessToken(refreshToken.(string))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		authResponse, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
-		session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
-		session.Save(r, w)
-
-		redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
+	if !ok {
+		fetchNewTokens(w, r, provider, rawRedirectURL, sourceState)
+		return
 	}
 
-	log.Println("access token missing. re-fetching tokens...")
+	authResponse, err := provider.GetProfileDataFromAccessToken(accessToken.(string))
+	if err == nil {
+		redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
+		return
+	}
+
+	//access token invalid
+	refreshToken, ok := session.Values[fmt.Sprintf("%s_refresh_token", providerName)]
+	if !ok {
+		fetchNewTokens(w, r, provider, rawRedirectURL, sourceState)
+		return
+	}
+
+	redeemResponse, err := provider.RefreshAccessToken(refreshToken.(string))
+	if err != nil {
+		fetchNewTokens(w, r, provider, rawRedirectURL, sourceState)
+		return
+	}
+
+	authResponse, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
+	if err != nil {
+		fetchNewTokens(w, r, provider, rawRedirectURL, sourceState)
+		return
+	}
+
+	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
+	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
+	session.Save(r, w)
+
+	redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
+}
+
+func fetchNewTokens(w http.ResponseWriter, r *http.Request,
+	provider providers.Provider, rawRedirectURL string, sourceState string) {
 	randomToken, err := utilities.GenerateRandomString(32)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,14 +106,13 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create a new session for state management
-	currentSession, err := sessions.ShortLiveCookie.Get(r, fmt.Sprintf("%s_save_state", providerName))
+	currentSession, err := sessions.ShortLiveCookie.Get(r, fmt.Sprintf("%s_save_state", provider.Data().ProviderName))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("loaded session with short live Cookie store")
-	state := fmt.Sprintf("%s||%s", providerName, randomToken)
+	state := fmt.Sprintf("%s||%s", provider.Data().ProviderName, randomToken)
 	currentSession.Values["state"] = randomToken
 	currentSession.Values["redirect_url"] = rawRedirectURL
 	currentSession.Values["source_state"] = sourceState
@@ -116,6 +120,7 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	provider.RedirectToAuthPage(w, r, state)
 }
 
+//CallbackHandler handles all Auth callbacks
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -123,7 +128,6 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("received call back..")
 	receivedState := r.Form.Get("state")
 	if receivedState == "" {
 		http.Error(w, "recieved no state from provider", http.StatusInternalServerError)
@@ -202,7 +206,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if authResponse == nil {
 		authResponse, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			redirectFailedAuth(w, r, redirectURL, sourceState, err.Error())
 			return
 		}
 	}
@@ -228,7 +232,7 @@ func redirectSuccessAuth(w http.ResponseWriter, r *http.Request,
 	params.Set("name", authResponse.Name)
 	params.Set("state", sourceState)
 	redirectURL.RawQuery = params.Encode()
-	http.Redirect(w, r, redirectURL.String(), http.StatusOK)
+	http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 }
 
 func redirectFailedAuth(w http.ResponseWriter, r *http.Request, redirectUrl *url.URL, sourceState string, errorMessage string) {
@@ -236,10 +240,9 @@ func redirectFailedAuth(w http.ResponseWriter, r *http.Request, redirectUrl *url
 	params.Set("error", errorMessage)
 	params.Set("state", sourceState)
 	redirectUrl.RawQuery = params.Encode()
-	http.Redirect(w, r, redirectUrl.String(), http.StatusForbidden)
+	http.Redirect(w, r, redirectUrl.String(), http.StatusFound)
 }
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Ping received")
 	w.WriteHeader(http.StatusOK)
 }

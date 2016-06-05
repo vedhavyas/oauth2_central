@@ -166,6 +166,10 @@ func (provider *GoogleProvider) GetProfileDataFromAccessToken(accessToken string
 	return &authResponse, nil
 }
 
+func (provider *GoogleProvider) Data() *providerData {
+	return provider.pData
+}
+
 //NewGoogleProvider gives new Google provider
 func NewGoogleProvider() Provider {
 	pData := providerData{}

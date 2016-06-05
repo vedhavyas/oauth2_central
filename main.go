@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/vedhavyas/oauth2_central/config"
 	"github.com/vedhavyas/oauth2_central/server"
 	"github.com/vedhavyas/oauth2_central/sessions"
-	"log"
 )
 
 func main() {
