@@ -9,11 +9,11 @@ import (
 func TestLoadConfigFile(t *testing.T) {
 
 	cases := []struct {
-		fileName string
-		result   bool
+		fileName       string
+		expectedResult bool
 	}{
-		{fileName: "no_file", result: false},
-		{fileName: "../config_file.json", result: true},
+		{fileName: "no_file", expectedResult: false},
+		{fileName: "../config_file.json", expectedResult: true},
 	}
 
 	for _, test := range cases {
@@ -22,6 +22,6 @@ func TestLoadConfigFile(t *testing.T) {
 		if err != nil {
 			result = false
 		}
-		assert.Equal(t, result, test.result)
+		assert.Equal(t, result, test.expectedResult)
 	}
 }

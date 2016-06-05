@@ -14,6 +14,7 @@ import (
 	"github.com/vedhavyas/oauth2_central/utilities"
 )
 
+//NotFoundHandler gets callback when no route is defines
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
@@ -190,8 +191,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var authResponse = &providers.AuthResponse{}
-	if redeemResponse.IdToken != "" {
-		err := providers.GetProfileFromIdToken(authResponse, redeemResponse.IdToken)
+	if redeemResponse.IDToken != "" {
+		err := providers.GetProfileFromIDToken(authResponse, redeemResponse.IDToken)
 		if err != nil {
 			redirectFailedAuth(w, r, redirectURL, sourceState, err.Error())
 			return
