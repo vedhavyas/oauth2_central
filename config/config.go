@@ -18,6 +18,7 @@ type config struct {
 	GoogleClientID  string `json:"google_client_id"`
 	GoogleSecret    string `json:"google_client_secret"`
 	GoogleAuthScope string `json:"google_auth_scope"`
+	GoogleDomain    string `json:"google_domain"`
 }
 
 //Config is the singleton holding all the configurations of the oauth central

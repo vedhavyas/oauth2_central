@@ -30,6 +30,9 @@ func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *htt
 	params.Set("redirect_uri", GetAuthCallBackURL(r))
 	params.Set("approval_prompt", "force")
 	params.Set("state", state)
+	if config.Config.GoogleDomain != "" {
+		params.Set("hd", config.Config.GoogleDomain)
+	}
 	authURL.RawQuery = params.Encode()
 	http.Redirect(w, r, authURL.String(), http.StatusFound)
 }
@@ -202,11 +205,25 @@ func GetProfileFromIDToken(authResponse *AuthResponse, idToken string) error {
 		return err
 	}
 
-	err = json.Unmarshal(b, authResponse)
+	var jsonResponse struct {
+		EmailVerified bool   `json:"email_verified"`
+		Hd            string `json:"hd"`
+		Email         string `json:"email"`
+		Name          string `json:"name"`
+	}
+
+	err = json.Unmarshal(b, &jsonResponse)
 	if err != nil {
 		return err
 	}
 
+	if config.Config.GoogleDomain != "" && config.Config.GoogleDomain != jsonResponse.Hd {
+		return errors.New("Email not from domain " + config.Config.GoogleDomain)
+	}
+
+	authResponse.Email = jsonResponse.Email
+	authResponse.EmailVerified = jsonResponse.EmailVerified
+	authResponse.Name = jsonResponse.Name
 	return nil
 }
 
