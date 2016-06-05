@@ -4,10 +4,14 @@ import (
 	"github.com/vedhavyas/oauth2_central/config"
 	"github.com/vedhavyas/oauth2_central/server"
 	"github.com/vedhavyas/oauth2_central/sessions"
+	"log"
 )
 
 func main() {
-	config.LoadConfigFile("")
+	err := config.LoadConfigFile("")
+	if err != nil {
+		log.Fatal(err)
+	}
 	sessions.InitiateCookieStores()
-	server.ServeHttp()
+	server.ServeHttpsIfAvailable()
 }

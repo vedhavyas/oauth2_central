@@ -26,7 +26,7 @@ func ServeHttp() {
 }
 
 func ServeHttpsIfAvailable() {
-	if config.Config.IsSecure() {
+	if config.Config.Secure {
 		err := http.ListenAndServeTLS(
 			fmt.Sprintf(":%s", config.Config.Port),
 			config.Config.TLSCert,

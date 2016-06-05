@@ -45,7 +45,7 @@ func GetAuthCallBackURL(r *http.Request) string {
 	authCallBackURL.Host = r.Host
 	authCallBackURL.Path = "/oauth2/callback"
 	if authCallBackURL.Scheme == "" {
-		if config.Config.IsSecure() {
+		if config.Config.Secure {
 			authCallBackURL.Scheme = "https"
 		} else {
 			authCallBackURL.Scheme = "http"
