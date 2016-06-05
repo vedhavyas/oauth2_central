@@ -37,6 +37,20 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rawRedirectURL := r.Form.Get("redirect_url")
+	sourceState := r.Form.Get("state")
+
+	if rawRedirectURL == "" {
+		http.Error(w, "redirect_url is missing from the form", http.StatusBadRequest)
+		return
+	}
+
+	redirectURL, err := url.Parse(rawRedirectURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	session, err := sessions.DefaultCookieStore.Get(r, fmt.Sprintf("%s_oauth", config.Config.CookieNameSpace))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,22 +60,26 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("loaded session with Default Cookie store")
 	accessToken, ok := session.Values[fmt.Sprintf("%s_access_token", providerName)]
 	if ok {
-		log.Println("found access token - " + accessToken.(string))
-		return
+		authResponse, err := provider.ValidateAccessToken(accessToken.(string))
+		if err == nil {
+			redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
+			return
+		}
+
+		//access token invalid
+		refreshToken, ok := session.Values[fmt.Sprintf("%s_refresh_token", providerName)]
+		if !ok {
+			http.Error(w, "Refresh token missing", http.StatusInternalServerError)
+			return
+		}
+
+		redeemResponse, err :=
 	}
 
 	log.Println("access token missing. re-fetching tokens...")
 	randomToken, err := utilities.GenerateRandomString(32)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	redirectURL := r.Form.Get("redirect_url")
-	sourceState := r.Form.Get("state")
-
-	if redirectURL == "" {
-		http.Error(w, "redirect_url is missing from the form", http.StatusBadRequest)
 		return
 	}
 
@@ -75,7 +93,7 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("loaded session with short live Cookie store")
 	state := fmt.Sprintf("%s||%s", providerName, randomToken)
 	currentSession.Values["state"] = randomToken
-	currentSession.Values["redirect_url"] = redirectURL
+	currentSession.Values["redirect_url"] = rawRedirectURL
 	currentSession.Values["source_state"] = sourceState
 	currentSession.Save(r, w)
 	provider.RedirectToAuthPage(w, r, state)
@@ -177,6 +195,11 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
 	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
 	session.Save(r, w)
+	redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
+}
+
+func redirectSuccessAuth(w http.ResponseWriter, r *http.Request,
+	redirectURL *url.URL, authResponse *providers.AuthResponse, sourceState string) {
 
 	params := url.Values{}
 	params.Set("email", authResponse.Email)

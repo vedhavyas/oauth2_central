@@ -11,6 +11,8 @@ import (
 type Provider interface {
 	RedirectToAuthPage(http.ResponseWriter, *http.Request, string)
 	RedeemCode(string, string) (*RedeemResponse, error)
+	ValidateAccessToken(string) (*AuthResponse, error)
+	RefreshAccessToken(string) (*RedeemResponse, error)
 }
 
 type AuthResponse struct {

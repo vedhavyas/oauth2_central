@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,7 +29,6 @@ func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *htt
 	params.Set("approval_prompt", "force")
 	params.Set("state", state)
 	authURL.RawQuery = params.Encode()
-	log.Println(authURL.String())
 	http.Redirect(w, r, authURL.String(), http.StatusFound)
 }
 
@@ -81,6 +80,50 @@ func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*Re
 	redeemResponse.ExpiresOn = time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second)
 	redeemResponse.IdToken = jsonResponse.IdToken
 	return &redeemResponse, nil
+}
+
+func (provider *GoogleProvider) ValidateAccessToken(accessToken string) (*AuthResponse, error) {
+	if provider.pData.ValidateURL == nil {
+		return nil, errors.New("Validation URL missing in provider")
+	}
+
+	validateURL := provider.pData.ValidateURL
+	params := url.Values{}
+	params.Set("access_token", accessToken)
+	validateURL.RawQuery = params.Encode()
+
+	req, err := http.NewRequest("GET", validateURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("Validate token failed")
+	}
+
+	var jsonResponse struct {
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"verified_email"`
+	}
+
+	json.Unmarshal(body, &jsonResponse)
+
+	authResponse := AuthResponse{}
+	authResponse.Email = jsonResponse.Email
+	authResponse.EmailVerified = jsonResponse.EmailVerified
+
+	return &authResponse, nil
 }
 
 func NewGoogleProvider() Provider {
