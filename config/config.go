@@ -37,7 +37,10 @@ func LoadConfigFile(filePath string) error {
 	if err != nil {
 		return err
 	}
-	json.NewDecoder(file).Decode(&Config)
+	err = json.NewDecoder(file).Decode(&Config)
+	if err != nil {
+		return err
+	}
 	log.Println("loaded config file from - " + filePath)
 	return nil
 }

@@ -10,7 +10,7 @@ import (
 
 //Provider interface for every provider available
 type Provider interface {
-	Data() *providerData
+	Data() *ProviderData
 	RedirectToAuthPage(http.ResponseWriter, *http.Request, string)
 	RedeemCode(string, string) (*RedeemResponse, error)
 	GetProfileDataFromAccessToken(string) (*AuthResponse, error)
@@ -32,7 +32,8 @@ type RedeemResponse struct {
 	IDToken      string    `json:"id_token"`
 }
 
-type providerData struct {
+//ProviderData holds data for specific providers
+type ProviderData struct {
 	ProviderName string
 	ClientID     string
 	ClientSecret string

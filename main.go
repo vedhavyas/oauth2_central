@@ -14,5 +14,5 @@ func main() {
 		log.Fatal(err)
 	}
 	sessions.InitiateCookieStores()
-	server.ServeHttpsIfAvailable()
+	server.ServeHTTPSIfAvailable()
 }

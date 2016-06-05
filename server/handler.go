@@ -92,7 +92,11 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
 	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
 }
@@ -116,7 +120,12 @@ func fetchNewTokens(w http.ResponseWriter, r *http.Request,
 	currentSession.Values["state"] = randomToken
 	currentSession.Values["redirect_url"] = rawRedirectURL
 	currentSession.Values["source_state"] = sourceState
-	currentSession.Save(r, w)
+	err = currentSession.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	provider.RedirectToAuthPage(w, r, state)
 }
 
@@ -165,13 +174,17 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawRedirectUrl := currentSession.Values["redirect_url"].(string)
+	rawRedirectURL := currentSession.Values["redirect_url"].(string)
 	sourceState := currentSession.Values["source_state"].(string)
 
 	currentSession.Options.MaxAge = -1
-	currentSession.Save(r, w)
+	err = currentSession.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	redirectURL, err := url.Parse(rawRedirectUrl)
+	redirectURL, err := url.Parse(rawRedirectURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -219,7 +232,12 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
 	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	redirectSuccessAuth(w, r, redirectURL, authResponse, sourceState)
 }
 
@@ -235,14 +253,15 @@ func redirectSuccessAuth(w http.ResponseWriter, r *http.Request,
 	http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 }
 
-func redirectFailedAuth(w http.ResponseWriter, r *http.Request, redirectUrl *url.URL, sourceState string, errorMessage string) {
+func redirectFailedAuth(w http.ResponseWriter, r *http.Request, redirectURL *url.URL, sourceState string, errorMessage string) {
 	params := url.Values{}
 	params.Set("error", errorMessage)
 	params.Set("state", sourceState)
-	redirectUrl.RawQuery = params.Encode()
-	http.Redirect(w, r, redirectUrl.String(), http.StatusFound)
+	redirectURL.RawQuery = params.Encode()
+	http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 }
 
+//PingHandler handles the ping
 func PingHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

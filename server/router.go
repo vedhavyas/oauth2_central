@@ -21,13 +21,13 @@ func init() {
 
 }
 
-//ServerHttp serves http API
-func ServeHttp() {
+//ServeHTTP serves http API
+func ServeHTTP() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", config.Config.Port), helpers.LoggingHandler(Router)))
 }
 
-//ServeHttpsIfAvailable serves https API
-func ServeHttpsIfAvailable() {
+//ServeHTTPSIfAvailable serves https API
+func ServeHTTPSIfAvailable() {
 	if config.Config.Secure {
 		err := http.ListenAndServeTLS(
 			fmt.Sprintf(":%s", config.Config.Port),
@@ -37,11 +37,11 @@ func ServeHttpsIfAvailable() {
 
 		if err != nil {
 			log.Fatal(err)
-			ServeHttp()
+			ServeHTTP()
 		}
 
 		return
 	}
 
-	ServeHttp()
+	ServeHTTP()
 }

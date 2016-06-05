@@ -17,7 +17,7 @@ import (
 
 //GoogleProvider for Google Authorization
 type GoogleProvider struct {
-	pData *providerData
+	pData *ProviderData
 }
 
 //RedirectToAuthPage redirects to Google Auth page
@@ -57,14 +57,25 @@ func (provider *GoogleProvider) RefreshAccessToken(refreshToken string) (*Redeem
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	var jsonResponse struct {
 		AccessToken string `json:"access_token"`
 		ExpiryIn    int64  `json:"expires_in"`
 	}
 
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
+
 	redeemResponse := RedeemResponse{}
 	redeemResponse.AccessToken = jsonResponse.AccessToken
 	redeemResponse.RefreshToken = refreshToken
@@ -95,7 +106,11 @@ func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*Re
 	}
 	var body []byte
 	body, err = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +164,11 @@ func (provider *GoogleProvider) GetProfileDataFromAccessToken(accessToken string
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("Validate token failed")
@@ -160,7 +179,10 @@ func (provider *GoogleProvider) GetProfileDataFromAccessToken(accessToken string
 		EmailVerified bool   `json:"verified_email"`
 	}
 
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	authResponse := AuthResponse{}
 	authResponse.Email = jsonResponse.Email
@@ -169,13 +191,14 @@ func (provider *GoogleProvider) GetProfileDataFromAccessToken(accessToken string
 	return &authResponse, nil
 }
 
-func (provider *GoogleProvider) Data() *providerData {
+//Data provides provider specific data
+func (provider *GoogleProvider) Data() *ProviderData {
 	return provider.pData
 }
 
 //NewGoogleProvider gives new Google provider
 func NewGoogleProvider() Provider {
-	pData := providerData{}
+	pData := ProviderData{}
 	pData.ProviderName = "google"
 	pData.ClientID = config.Config.GoogleClientID
 	pData.ClientSecret = config.Config.GoogleSecret
