@@ -1,0 +1,17 @@
+machine:
+  environment:
+    GO15VENDOREXPERIMENT: 1
+    IMPORT_PATH: "github.com/vedhavyas/$CIRCLE_PROJECT_REPONAME"
+
+dependencies:
+  override:
+    - sudo mkdir -p "/usr/local/go_workspace/src/$IMPORT_PATH"
+    - sudo rsync -azC --delete ./ "/usr/local/go_workspace/src/$IMPORT_PATH/"
+    - make install
+
+test:
+  pre:
+    - make lint
+
+  override:
+    - make test

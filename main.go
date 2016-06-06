@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/vedhavyas/oauth2_central/config"
@@ -9,7 +10,9 @@ import (
 )
 
 func main() {
-	err := config.LoadConfigFile("")
+	configFile := flag.String("config-file", "", "configuration file for the service")
+	flag.Parse()
+	err := config.LoadConfigFile(*configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
