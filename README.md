@@ -13,7 +13,7 @@
 	"google_client_id":"google client id",
 	"google_client_secret":"google client secret",
     "google_auth_scope":"openid profile email",
-    "google_domain":"instamojo.com" //optional
+    "google_domain":"instamojo.com"
 }```
 
 pass the path of the config file as command line argument like this - ./oauth2_central -config-file=path/to/file

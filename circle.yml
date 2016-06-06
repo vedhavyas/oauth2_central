@@ -8,11 +8,11 @@ dependencies:
   override:
     - sudo mkdir -p $PROJECT_PATH
     - sudo rsync -azC --delete ./ $PROJECT_PATH
-    - cd $PROJECT_PATH; sudo make install
+    - cd $PROJECT_PATH; make install
 
 test:
   pre:
-    - cd $PROJECT_PATH; sudo make lint
+    - cd $PROJECT_PATH; make lint
 
   override:
-    - cd $PROJECT_PATH; sudo make test
+    - cd $PROJECT_PATH; make test
