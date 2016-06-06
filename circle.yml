@@ -2,16 +2,17 @@ machine:
   environment:
     GO15VENDOREXPERIMENT: 1
     IMPORT_PATH: "github.com/vedhavyas/$CIRCLE_PROJECT_REPONAME"
+    PROJECT_PATH: "/usr/local/go_workspace/src/$IMPORT_PATH"
 
 dependencies:
   override:
-    - sudo mkdir -p "/usr/local/go_workspace/src/$IMPORT_PATH"
-    - sudo rsync -azC --delete ./ "/usr/local/go_workspace/src/$IMPORT_PATH/"
-    - make install
+    - sudo mkdir -p $PROJECT_PATH
+    - sudo rsync -azC --delete ./ $PROJECT_PATH
+    - cd $PROJECT_PATH; make install
 
 test:
   pre:
-    - make lint
+    - cd $PROJECT_PATH; make lint
 
   override:
-    - make test
+    - cd $PROJECT_PATH; make test
