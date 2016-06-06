@@ -1,4 +1,4 @@
-Central oauth2 sso for services
+# Central oauth2 sso for services
 
 ## Config file:
 
