@@ -3,7 +3,7 @@ machine:
     GO15VENDOREXPERIMENT: 1
     IMPORT_PATH: "github.com/vedhavyas/$CIRCLE_PROJECT_REPONAME"
     PROJECT_PATH: "/usr/local/go_workspace/src/$IMPORT_PATH"
-    PKG_PATH: "/usr/local/go_workspace/pkg/linux_amd64/github.com/vedhavyas"
+    PKG_PATH: "/usr/local/go_workspace/pkg/linux_amd64/$IMPORT_PATH"
 
 dependencies:
   override:
