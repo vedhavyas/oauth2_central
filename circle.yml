@@ -3,15 +3,17 @@ machine:
     GO15VENDOREXPERIMENT: 1
     IMPORT_PATH: "github.com/vedhavyas/$CIRCLE_PROJECT_REPONAME"
     PROJECT_PATH: "/usr/local/go_workspace/src/$IMPORT_PATH"
+    PKG_PATH: "/usr/local/go_workspace/pkg/linux_amd64/github.com/vedhavyas"
 
 dependencies:
   override:
     - sudo mkdir -p $PROJECT_PATH
+    - sudo mkdir -p $PKG_PATH
     - sudo rsync -azC --delete ./ $PROJECT_PATH
     - go get github.com/tools/godep
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install --update --force
-    - sudo go install $IMPORT_PATH
+    - go install $IMPORT_PATH
 
 test:
   pre:
