@@ -8,11 +8,14 @@ dependencies:
   override:
     - sudo mkdir -p $PROJECT_PATH
     - sudo rsync -azC --delete ./ $PROJECT_PATH
-    - cd $PROJECT_PATH; sudo make install
+    - go get github.com/tools/godep
+    - go get github.com/alecthomas/gometalinter
+    - gometalinter --install --update --force
+    - go install $IMPORT_PATH
 
 test:
   pre:
-    - cd $PROJECT_PATH; sudo make lint
+    - cd $PROJECT_PATH; make lint
 
   override:
-    - cd $PROJECT_PATH; sudo make test
+    - cd $PROJECT_PATH; make test
