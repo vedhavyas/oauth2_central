@@ -14,7 +14,8 @@
 	"google_client_secret":"google client secret",
     "google_auth_scope":"openid profile email",
     "google_domain":"instamojo.com"
-}```
+}
+```
 
 pass the path of the config file as command line argument like this - ./oauth2_central -config-file=path/to/file
 if none is passed, program will look for config_file.json in the project root.

@@ -13,7 +13,7 @@ dependencies:
     - go get github.com/tools/godep
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install --update --force
-    - go install $IMPORT_PATH
+    - sudo /usr/local/go/bin/go install $IMPORT_PATH
 
 test:
   pre:
