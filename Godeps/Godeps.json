@@ -1,0 +1,26 @@
+{
+	"ImportPath": "github.com/vedhavyas/oauth2_central",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-4-gaed02d1",
+			"Rev": "aed02d124ae4a0e94fea4541c8effd05bf0c8296"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-9-gbd09be0",
+			"Rev": "bd09be08ed4377796d312df0a45314e11b8f5dc1"
+		},
+		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Comment": "v1.1-2-gff35634",
+			"Rev": "ff356348f74133a59d3e93aa24b5b4551b6fe90d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/sessions",
+			"Rev": "a4e6dd28f9e9274729417506b9bd0a6c3edb91ce"
+		}
+	]
+}
