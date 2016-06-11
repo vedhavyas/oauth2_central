@@ -10,9 +10,16 @@ import (
 )
 
 func main() {
-	//todo add log flags
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	configFile := flag.String("config-file", "", "configuration file for the service")
+	showVersion := flag.Bool("version", false, "version deatils of oauth2_central")
 	flag.Parse()
+
+	if *showVersion {
+		printVersion()
+		return
+	}
+
 	err := config.LoadConfigFile(*configFile)
 	if err != nil {
 		log.Fatal(err)

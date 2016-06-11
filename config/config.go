@@ -8,7 +8,6 @@ import (
 
 type config struct {
 	Port    string `json:"port"`
-	Secure  bool   `json:"secure"`
 	TLSKey  string `json:"tls_key"`
 	TLSCert string `json:"tls_cert"`
 
@@ -41,6 +40,11 @@ func LoadConfigFile(filePath string) error {
 	if err != nil {
 		return err
 	}
-	log.Println("loaded config file from - " + filePath)
+	log.Println("loaded configuration from " + filePath)
 	return nil
+}
+
+//IsSecure determines whether oauth is serving over HTTPS
+func (c config) IsSecure() bool {
+	return c.TLSCert != "" && c.TLSKey != ""
 }

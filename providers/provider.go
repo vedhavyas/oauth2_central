@@ -51,7 +51,7 @@ func GetAuthCallBackURL(r *http.Request) string {
 	authCallBackURL.Host = r.Host
 	authCallBackURL.Path = "/oauth2/callback"
 	if authCallBackURL.Scheme == "" {
-		if config.Config.Secure {
+		if config.Config.IsSecure() {
 			authCallBackURL.Scheme = "https"
 		} else {
 			authCallBackURL.Scheme = "http"
@@ -65,7 +65,7 @@ func GetProvider(providerName string) Provider {
 	switch providerName {
 	case "google":
 		return NewGoogleProvider()
+	default:
+		return NewGoogleProvider()
 	}
-
-	return nil
 }
