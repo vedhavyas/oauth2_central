@@ -6,6 +6,10 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/vedhavyas/oauth2_central)](https://goreportcard.com/report/github.com/vedhavyas/oauth2_central)
 
+[![Code Climate](https://codeclimate.com/github/vedhavyas/oauth2_central/badges/gpa.svg)](https://codeclimate.com/github/vedhavyas/oauth2_central)
+
+[![Test Coverage](https://codeclimate.com/github/vedhavyas/oauth2_central/badges/coverage.svg)](https://codeclimate.com/github/vedhavyas/oauth2_central/coverage)
+
 ## Config File
 Rename config.json.example to config.json and fill in all details
 
