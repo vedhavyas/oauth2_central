@@ -12,7 +12,8 @@ test:
 
 package:
 	go clean
-	CGO_ENABLED=0 GOOS=$(shell echo `uname` | awk '{print tolower($0)}') go build -a -installsuffix cgo -o oauth2_central .
+	OS="darwin"
+	CGO_ENABLED=0 GOOS=$$OS go build -a -installsuffix cgo -o oauth2_central .
 	./oauth2_central -version
 
 all: install lint test package

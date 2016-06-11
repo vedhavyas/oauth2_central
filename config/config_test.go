@@ -13,7 +13,7 @@ func TestLoadConfigFile(t *testing.T) {
 		expectedResult bool
 	}{
 		{fileName: "no_file", expectedResult: false},
-		{fileName: "../config.json", expectedResult: true},
+		{fileName: "../config.json", expectedResult: false},
 	}
 
 	for _, test := range cases {

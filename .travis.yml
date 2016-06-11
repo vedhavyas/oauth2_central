@@ -8,4 +8,4 @@ install:
 script:
  - make lint
  - make test
- - make package
+ - make package OS="linux"
