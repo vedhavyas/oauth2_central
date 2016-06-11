@@ -4,6 +4,8 @@
 
 [![GoDoc](https://godoc.org/github.com/vedhavyas/oauth2_central?status.png)](https://godoc.org/github.com/vedhavyas/oauth2_central)
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/vedhavyas/oauth2_central)](https://goreportcard.com/report/github.com/vedhavyas/oauth2_central)
+
 ## Config File
 Rename config.json.example to config.json and fill in all details
 
