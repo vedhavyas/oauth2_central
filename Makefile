@@ -8,7 +8,7 @@ lint:
 	gometalinter --deadline=60s --vendor --cyclo-over=20 --disable=vetshadow ./...
 
 test:
-	go test $(go list ./... | grep -v '/vendor/') --cover
+	go test $(shell go list ./... | grep -v '/vendor/') --cover
 
 package:
 	go clean
