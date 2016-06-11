@@ -1,0 +1,13 @@
+{
+	"port":"8080",  //port on which service will run
+	"tls_key":"",   //tls key to serve https
+   	"tls_cert":"",  //tls cert to serve https
+
+	"cookie_name_space":"test", //name space for cookie, cookie name will be name_space_oauth
+	"cookie_secret":"the big bad secret", //cookie encryption key
+
+	"google_client_id":"example.apps.googleusercontent.com",  //google app client id
+	"google_client_secret":"secret", //google app client secret
+	"google_auth_scope":"openid profile email", // google auth scope. Dont change if you dont know what this does
+	"google_domain":"mydomain.com" //optional tag to force users to choose from specific domains
+}
