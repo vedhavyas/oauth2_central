@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	//todo add log flags
 	configFile := flag.String("config-file", "", "configuration file for the service")
 	flag.Parse()
 	err := config.LoadConfigFile(*configFile)
