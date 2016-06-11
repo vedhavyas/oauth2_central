@@ -13,8 +13,8 @@ func TestGithub_RefreshAccessToken(t *testing.T) {
 		refreshToken     string
 		expectedResponse *RedeemResponse
 	}{
-		{refreshToken: "1234566w7", expectedResponse: nil},
-		{refreshToken: "sdbvsbvhsfbhv", expectedResponse: nil},
+		{refreshToken: "1234dasfaf566w7", expectedResponse: nil},
+		{refreshToken: "sdbdfsdfsdgsdgvsbvhsfbhv", expectedResponse: nil},
 	}
 
 	provider := NewGitHubProvider()
@@ -33,8 +33,8 @@ func TestGithub_RedeemCode(t *testing.T) {
 		state          string
 		expectedResult *RedeemResponse
 	}{
-		{code: "123453", redirectURL: redirectURL, expectedResult: nil},
-		{code: "jhkdvsadf", redirectURL: redirectURL, expectedResult: nil},
+		{code: "123fsdgwefsdv453", redirectURL: redirectURL, expectedResult: nil},
+		{code: "jhkdsdvsdvafvsadf", redirectURL: redirectURL, expectedResult: nil},
 	}
 
 	provider := NewGitHubProvider()
@@ -50,8 +50,8 @@ func TestGithub_GetProfileDataFromAccessToken(t *testing.T) {
 		accessToken      string
 		expectedResponse *AuthResponse
 	}{
-		{accessToken: "1234566w7", expectedResponse: nil},
-		{accessToken: "sdbvsbvhsfbhv", expectedResponse: nil},
+		{accessToken: "12sdgasfbva34566w7", expectedResponse: nil},
+		{accessToken: "sdsdggsabvsbvhsfbhv", expectedResponse: nil},
 	}
 
 	provider := NewGitHubProvider()

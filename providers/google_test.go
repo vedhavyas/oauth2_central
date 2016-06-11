@@ -13,8 +13,8 @@ func TestGoogleProvider_RefreshAccessToken(t *testing.T) {
 		refreshToken     string
 		expectedResponse string
 	}{
-		{refreshToken: "1234566w7", expectedResponse: ""},
-		{refreshToken: "sdbvsbvhsfbhv", expectedResponse: ""},
+		{refreshToken: "123456csedvrv6w7", expectedResponse: ""},
+		{refreshToken: "sdbvssdfvfwevsdbvhsfbhv", expectedResponse: ""},
 	}
 
 	provider := NewGoogleProvider()
@@ -34,8 +34,8 @@ func TestGoogleProvider_RedeemCode(t *testing.T) {
 		state          string
 		expectedResult *RedeemResponse
 	}{
-		{code: "123453", redirectURL: redirectURL, expectedResult: nil},
-		{code: "jhkdvsadf", redirectURL: redirectURL, expectedResult: nil},
+		{code: "1234dfrvsdvsd53", redirectURL: redirectURL, expectedResult: nil},
+		{code: "jhkdsdcrwcavsadf", redirectURL: redirectURL, expectedResult: nil},
 	}
 
 	provider := NewGoogleProvider()
