@@ -1,4 +1,4 @@
-config_file.json
+config.json
 .idea
 oauth2_central.iml
 *.pem

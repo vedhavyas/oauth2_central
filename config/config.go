@@ -24,11 +24,11 @@ type config struct {
 var Config = config{}
 
 //LoadConfigFile loads all the configurations given in the config file.
-//if filePath is empty, will revert back to config_file.json
+//if filePath is empty, will revert back to config.json
 func LoadConfigFile(filePath string) error {
 
 	if filePath == "" {
-		filePath = "config_file.json"
+		filePath = "config.json"
 	}
 
 	file, err := os.Open(filePath)

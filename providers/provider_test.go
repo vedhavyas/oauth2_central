@@ -14,7 +14,7 @@ func TestGetProvider(t *testing.T) {
 		expectedResult Provider
 	}{
 		{providerName: "google", expectedResult: NewGoogleProvider()},
-		{providerName: "no_provider", expectedResult: nil},
+		{providerName: "no_provider", expectedResult: NewGoogleProvider()},
 	}
 
 	for _, test := range cases {
