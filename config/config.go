@@ -13,11 +13,19 @@ type config struct {
 
 	CookieNameSpace string `json:"cookie_name_space"`
 	CookieSecret    string `json:"cookie_secret"`
+	CookieExpiresIn string `json:"cookie_expires_in"`
+	CookieHTTPOnly  bool   `json:"cookie_http_only"`
+	CookieSecure    bool   `json:"cookie_secure"`
 
-	GoogleClientID  string `json:"google_client_id"`
-	GoogleSecret    string `json:"google_client_secret"`
-	GoogleAuthScope string `json:"google_auth_scope"`
-	GoogleDomain    string `json:"google_domain"`
+	GoogleClientID     string `json:"google_client_id"`
+	GoogleClientSecret string `json:"google_client_secret"`
+	GoogleAuthScope    string `json:"google_auth_scope"`
+	GoogleDomain       string `json:"google_domain"`
+
+	GithubClientID     string `json:"github_client_id"`
+	GithubClientSecret string `json:"github_client_secret"`
+	GithubAuthScope    string `json:"github_auth_scope"`
+	GithubAllowSignUp  bool   `json:"github_allow_signup"`
 }
 
 //Config is the singleton holding all the configurations of the oauth central

@@ -25,8 +25,8 @@ func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *htt
 	authURL := provider.pData.LoginURL
 	params, _ := url.ParseQuery(authURL.RawQuery)
 	params.Set("response_type", "code")
-	params.Set("scope", provider.pData.Scope)
-	params.Set("client_id", provider.pData.ClientID)
+	params.Set("scope", config.Config.GoogleAuthScope)
+	params.Set("client_id", config.Config.GoogleClientID)
 	params.Set("redirect_uri", GetAuthCallBackURL(r))
 	params.Set("approval_prompt", "force")
 	params.Set("state", state)
@@ -41,8 +41,8 @@ func (provider *GoogleProvider) RedirectToAuthPage(w http.ResponseWriter, r *htt
 func (provider *GoogleProvider) RefreshAccessToken(refreshToken string) (*RedeemResponse, error) {
 	params := url.Values{}
 	params.Set("refresh_token", refreshToken)
-	params.Set("client_id", provider.pData.ClientID)
-	params.Set("client_secret", provider.pData.ClientSecret)
+	params.Set("client_id", config.Config.GoogleClientID)
+	params.Set("client_secret", config.Config.GoogleClientSecret)
 	params.Set("grant_type", "refresh_token")
 
 	req, err := http.NewRequest("POST", provider.pData.RedeemURL.String(), bytes.NewBufferString(params.Encode()))
@@ -85,11 +85,11 @@ func (provider *GoogleProvider) RefreshAccessToken(refreshToken string) (*Redeem
 }
 
 //RedeemCode gets access token and refresh token using the code provided
-func (provider *GoogleProvider) RedeemCode(code string, redirectURL string) (*RedeemResponse, error) {
+func (provider *GoogleProvider) RedeemCode(code string, redirectURL string, state string) (*RedeemResponse, error) {
 	params := url.Values{}
 	params.Add("redirect_uri", redirectURL)
-	params.Add("client_id", provider.pData.ClientID)
-	params.Add("client_secret", provider.pData.ClientSecret)
+	params.Add("client_id", config.Config.GoogleClientID)
+	params.Add("client_secret", config.Config.GoogleClientSecret)
 	params.Add("code", code)
 	params.Add("grant_type", "authorization_code")
 
@@ -200,9 +200,6 @@ func (provider *GoogleProvider) Data() *ProviderData {
 func NewGoogleProvider() Provider {
 	pData := ProviderData{}
 	pData.ProviderName = "google"
-	pData.ClientID = config.Config.GoogleClientID
-	pData.ClientSecret = config.Config.GoogleSecret
-	pData.Scope = config.Config.GoogleAuthScope
 	pData.LoginURL = &url.URL{Scheme: "https",
 		Host:     "accounts.google.com",
 		Path:     "/o/oauth2/auth",

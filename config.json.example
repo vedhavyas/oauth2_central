@@ -5,9 +5,19 @@
 
 	"cookie_name_space":"test", //name space for cookie, cookie name will be name_space_oauth
 	"cookie_secret":"the big bad secret", //cookie encryption key
+	"cookie_expires_in":"3M",   //(optional)cookie expiry time s-second, m-minute, h-hour, d-day, M-month, y-year
+	                            //Default is 1M - one month
+
+    "cookie_http_only":true,    //Cookie http only. Recommended true
+    "cookie_secure":false,      //Cookie secure. Recommended true
 
 	"google_client_id":"example.apps.googleusercontent.com",  //google app client id
 	"google_client_secret":"secret", //google app client secret
 	"google_auth_scope":"openid profile email", // google auth scope. Dont change if you dont know what this does
-	"google_domain":"mydomain.com" //optional tag to force users to choose from specific domains
+	"google_domain":"mydomain.com" //(optional) tag to force users to choose from specific domains
+
+	"github_client_id":"12345667",  //github app client id
+    "github_client_secret":"asfbsdhvbhcbvhldbvhdbfiv",  //github app client secret
+    "github_auth_scope":"user read:org",    //github auth scopes
+    "github_allow_signup":true  //allows user to signup on github if needed
 }

@@ -8,25 +8,24 @@ import (
 	"github.com/bmizerany/assert"
 )
 
-func TestGoogleProvider_RefreshAccessToken(t *testing.T) {
+func TestGithub_RefreshAccessToken(t *testing.T) {
 	tests := []struct {
 		refreshToken     string
-		expectedResponse string
+		expectedResponse *RedeemResponse
 	}{
-		{refreshToken: "1234566w7", expectedResponse: ""},
-		{refreshToken: "sdbvsbvhsfbhv", expectedResponse: ""},
+		{refreshToken: "1234566w7", expectedResponse: nil},
+		{refreshToken: "sdbvsbvhsfbhv", expectedResponse: nil},
 	}
 
-	provider := NewGoogleProvider()
+	provider := NewGitHubProvider()
 
 	for _, test := range tests {
 		result, _ := provider.RefreshAccessToken(test.refreshToken)
-		assert.Equal(t, result.AccessToken, test.expectedResponse)
+		assert.Equal(t, result, test.expectedResponse)
 	}
-
 }
 
-func TestGoogleProvider_RedeemCode(t *testing.T) {
+func TestGithub_RedeemCode(t *testing.T) {
 	redirectURL := GetAuthCallBackURL(&http.Request{Host: "localhost:8080", URL: &url.URL{Scheme: ""}})
 	tests := []struct {
 		code           string
@@ -38,25 +37,24 @@ func TestGoogleProvider_RedeemCode(t *testing.T) {
 		{code: "jhkdvsadf", redirectURL: redirectURL, expectedResult: nil},
 	}
 
-	provider := NewGoogleProvider()
+	provider := NewGitHubProvider()
 
 	for _, test := range tests {
 		response, _ := provider.RedeemCode(test.code, test.redirectURL, test.state)
 		assert.Equal(t, response, test.expectedResult)
 	}
-
 }
 
-func TestGoogleProvider_GetProfileDataFromAccessToken(t *testing.T) {
+func TestGithub_GetProfileDataFromAccessToken(t *testing.T) {
 	tests := []struct {
 		accessToken      string
 		expectedResponse *AuthResponse
 	}{
-		{accessToken: "1fwe234asdfd566w7", expectedResponse: nil},
-		{accessToken: "sdbfsdfwfvsbvhsfbhv", expectedResponse: nil},
+		{accessToken: "1234566w7", expectedResponse: nil},
+		{accessToken: "sdbvsbvhsfbhv", expectedResponse: nil},
 	}
 
-	provider := NewGoogleProvider()
+	provider := NewGitHubProvider()
 	for _, test := range tests {
 		response, _ := provider.GetProfileDataFromAccessToken(test.accessToken)
 		assert.Equal(t, response, test.expectedResponse)

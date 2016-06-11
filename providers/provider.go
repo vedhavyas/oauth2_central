@@ -12,7 +12,7 @@ import (
 type Provider interface {
 	Data() *ProviderData
 	RedirectToAuthPage(http.ResponseWriter, *http.Request, string)
-	RedeemCode(string, string) (*RedeemResponse, error)
+	RedeemCode(string, string, string) (*RedeemResponse, error)
 	GetProfileDataFromAccessToken(string) (*AuthResponse, error)
 	RefreshAccessToken(string) (*RedeemResponse, error)
 }
@@ -35,9 +35,6 @@ type RedeemResponse struct {
 //ProviderData holds data for specific providers
 type ProviderData struct {
 	ProviderName string
-	ClientID     string
-	ClientSecret string
-	Scope        string
 	LoginURL     *url.URL
 	RedeemURL    *url.URL
 	ValidateURL  *url.URL
@@ -65,6 +62,8 @@ func GetProvider(providerName string) Provider {
 	switch providerName {
 	case "google":
 		return NewGoogleProvider()
+	case "github":
+		return NewGitHubProvider()
 	default:
 		return NewGoogleProvider()
 	}
