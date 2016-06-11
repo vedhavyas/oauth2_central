@@ -21,7 +21,7 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-//StartHandler callback to handle all oauth start requests
+//StartAuthHandler callback to handle all oauth start requests
 func StartAuthHandler(w http.ResponseWriter, r *http.Request) {
 	authRes, authError := isAuthenticated(w, r)
 
@@ -166,8 +166,7 @@ func fetchNewTokens(w http.ResponseWriter, r *http.Request,
 
 //CallbackHandler handles all Auth callbacks
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -214,8 +213,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	sourceState := currentSession.Values["source_state"].(string)
 
 	currentSession.Options.MaxAge = -1
-	err = currentSession.Save(r, w)
-	if err != nil {
+
+	if err = currentSession.Save(r, w); err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -227,8 +226,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	errorMessage := r.Form.Get("error")
-	if errorMessage != "" {
+
+	if errorMessage := r.Form.Get("error"); errorMessage != "" {
 		log.Println(errorMessage)
 		redirectFailedAuth(w, r, redirectURL, sourceState, errorMessage)
 		return
@@ -250,8 +249,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	var authRes = &providers.AuthResponse{}
 	if redeemResponse.IDToken != "" {
-		err := providers.GetProfileFromIDToken(authRes, redeemResponse.IDToken)
-		if err != nil {
+		if err := providers.GetProfileFromIDToken(authRes, redeemResponse.IDToken); err != nil {
 			log.Println(err)
 			redirectFailedAuth(w, r, redirectURL, sourceState, err.Error())
 			return
@@ -276,8 +274,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Values[fmt.Sprintf("%s_access_token", providerName)] = redeemResponse.AccessToken
 	session.Values[fmt.Sprintf("%s_refresh_token", providerName)] = redeemResponse.RefreshToken
-	err = session.Save(r, w)
-	if err != nil {
+
+	if err := session.Save(r, w); err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
