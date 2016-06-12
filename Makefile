@@ -5,7 +5,7 @@ install:
 	go install
 
 lint:
-	gometalinter --deadline=60s --vendor --cyclo-over=20 --disable=vetshadow ./...
+	gometalinter --deadline=60s --vendor --cyclo-over=20 --disable=vetshadow --disable=dupl ./...
 
 test:
 	go test $(shell go list ./... | grep -v '/vendor/') --cover

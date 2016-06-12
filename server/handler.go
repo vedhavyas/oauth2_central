@@ -108,7 +108,7 @@ func isAuthenticated(w http.ResponseWriter, r *http.Request) (*providers.AuthRes
 	}
 
 	refreshToken, ok := session.Values[fmt.Sprintf("%s_refresh_token", providerName)]
-	if !ok {
+	if !ok || refreshToken == "" {
 		log.Println("refresh token missing")
 		return nil, helpers.NewRecoverableError("Refresh token missing")
 	}
@@ -185,7 +185,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	providerName := dataParts[0]
-	receivedState = dataParts[1]
+	receivedToken := dataParts[1]
 
 	provider := providers.GetProvider(providerName)
 
@@ -203,7 +203,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if expectedState != receivedState {
+	if expectedState != receivedToken {
 		log.Println("state mismatch")
 		http.Error(w, "state mismatch", http.StatusInternalServerError)
 		return
@@ -240,7 +240,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redeemResponse, err := provider.RedeemCode(code, providers.GetAuthCallBackURL(r))
+	redeemResponse, err := provider.RedeemCode(code, providers.GetAuthCallBackURL(r), receivedState)
 	if err != nil {
 		log.Println(err)
 		redirectFailedAuth(w, r, redirectURL, sourceState, err.Error())
@@ -256,7 +256,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if authRes == nil {
+	if authRes.Email == "" {
 		authRes, err = provider.GetProfileDataFromAccessToken(redeemResponse.AccessToken)
 		if err != nil {
 			log.Println(err)
@@ -287,7 +287,6 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 func redirectSuccessAuth(w http.ResponseWriter, r *http.Request,
 	redirectURL *url.URL, authResponse *providers.AuthResponse, sourceState string) {
-
 	params := url.Values{}
 	params.Set("email", authResponse.Email)
 	params.Set("email_verified", strconv.FormatBool(authResponse.EmailVerified))
